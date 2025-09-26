@@ -54,6 +54,9 @@ for dept, pos_list in positions_by_group.items():
         positions.append(p)
         position_to_department[p] = f"Department {dept}"
 
+
+
+
 # ====== Applications "réalistes" par catégorie ======
 # Chaque appli a un name et une category, ce qui permet de définir des règles métier propres.
 APPLICATION_CATALOG = [
@@ -116,13 +119,34 @@ APPLICATION_CATALOG = [
     ("Visitor Management System", "FACILITIES"),
 ]
 
-# on complète par des apps génériques:
-while len(APPLICATION_CATALOG) < N_APPLICATIONS:
-    APPLICATION_CATALOG.append((f"Internal App {len(APPLICATION_CATALOG)+1}", "OTHER"))
+
+# --- Générer 1 application Facilities "Access Badge System - <Ville>" par ville ---
+# (On enlève d'abord d'éventuelles entrées Facilities existantes pour éviter les doublons.)
+APPLICATION_CATALOG = [app for app in APPLICATION_CATALOG
+                       if not (app[1] == "FACILITIES" and app[0].startswith("Access Badge System - "))]
+
+# On ajoute une appli de badge par ville de 'locations'
+facilities_per_city = [(f"Access Badge System - {city}", "FACILITIES") for city in locations]
+APPLICATION_CATALOG = facilities_per_city + APPLICATION_CATALOG  # on les met en tête (optionnel)
 
 applications = []
 for i, (nm, cat) in enumerate(APPLICATION_CATALOG[:N_APPLICATIONS], start=1):
     applications.append({"application_id": i, "name": nm, "category": cat})
+
+    
+# Mapping ville -> application_id de badge (utile pour l’assignation des droits)
+city_to_badge_app_id = {
+    city: app["application_id"]
+    for city in locations
+    for app in applications
+    if app["category"] == "FACILITIES" and app["name"] == f"Access Badge System - {city}"
+}
+
+# on complète par des apps génériques:
+while len(APPLICATION_CATALOG) < N_APPLICATIONS:
+    APPLICATION_CATALOG.append((f"Internal App {len(APPLICATION_CATALOG)+1}", "OTHER"))
+
+
 
 apps_df = pd.DataFrame(applications)
 apps_df.to_csv(os.path.join(OUTPUT_DIR, "applications.csv"), index=False)
@@ -149,32 +173,50 @@ PERM_TEMPLATES = {
     "OTHER":       ["login", "read", "write", "export", "admin"],
 }
 
+permissions = []
+pid = 1
+permissions_by_app = defaultdict(list)
+
+# Tu dois avoir PERM_TEMPLATES défini (comme dans ta version "apps réelles")
+# On garantit la présence de 'access_building' pour TOUTE app FACILITIES
+access_building_pid_by_app = {}  # app_id -> permission_id 'access_building'
+
 for app in applications:
     app_id = app["application_id"]
     cat = app["category"]
     base = PERM_TEMPLATES.get(cat, PERM_TEMPLATES["OTHER"])
 
-    # chaque appli a 5 à 12 permissions, construites à partir des templates + variations
+    # nb de permissions aléatoires + gabarits
     n_perm = max(5, int(np.random.poisson(9)))
     names = set()
     while len(names) < n_perm:
         action = random.choice(base)
-        # on ajoute une cible pour varier: user/data/report/project/building/etc.
-        target = random.choice(["", "_users", "_data", "_reports", "project", "settings", "building", "mailbox"])
+        target = random.choice(["", "_users", "_data", "_reports", "_project", "_settings", "_building", "_mailbox"])
         perm_name = f"{action}{target}".strip("_")
         names.add(perm_name)
 
-    for name in names:
+    # >>> Garantie 'access_building' pour les apps de badge
+    if cat == "FACILITIES":
+        names.add("access_building")
+
+    # Création des permissions + index inverses
+    for name in sorted(names):
         permissions.append({
             "application_id": app_id,
             "permission_id": pid,
             "name": name
         })
         permissions_by_app[app_id].append(pid)
+
+        # Mémoriser l'ID de 'access_building'
+        if app["category"] == "FACILITIES" and name == "access_building":
+            access_building_pid_by_app[app_id] = pid
+
         pid += 1
 
 perms_df = pd.DataFrame(permissions)
 perms_df.to_csv(os.path.join(OUTPUT_DIR, "permissions.csv"), index=False)
+
 
 # ----- Sélections par catégorie (remplace les filtres "if 'Collab' in name") -----
 def apps_by_category(cat):
@@ -251,48 +293,44 @@ users_df.to_csv(os.path.join(OUTPUT_DIR, "users.csv"), index=False)
 # ----- Génération Rights (habilitation) -----
 rights = []
 
-# Probability parameters pour le "bruit"
-PROB_MISSING_BASE_PERMISSION = 0.02   # % de base permissions manquantes (un utilisateur "manque" une permission)
-PROB_EXTRA_PERMISSION = 0.03          # % de permissions supplémentaires non-justifiées
+PROB_MISSING_BASE_PERMISSION = 0.02
+PROB_EXTRA_PERMISSION = 0.03
 
-# For performance, precompute all permission ids list
 all_perm_ids = [p["permission_id"] for p in permissions]
 perm_to_app = {p["permission_id"]: p["application_id"] for p in permissions}
 
 for u in users:
     uid = u["user_id"]
     pos = u["position"]
-    # determine group it belongs to from positions_by_group reverse lookup
+    user_city = u["location"]
+
+    # ----- règles de base par groupe -----
     group = None
     for g, pos_list in positions_by_group.items():
         if pos in pos_list:
             group = g
             break
-    # base permissions from group rules
-    base_perms = list(base_rules.get(group, []))  # list of (app, perm)
-    # location-based: add building access for users in some cities (e.g., Toulouse -> give some building perms)
-    if u["location"] in ["Toulouse", "Paris", "Nantes"]:
-        # randomly give some building perms tied to those locations
-        # choose 1 building perm if exists
-        if building_perms:
-            bp = random.choice(building_perms)
-            base_perms.append(bp)
+    base_perms = list(base_rules.get(group, []))  # [(app_id, perm_id), ...]
 
-    # ensure uniqueness
+    # (Ancienne logique aléatoire "building_perms" → À SUPPRIMER)
+    # if u["location"] in ["Toulouse", "Paris", "Nantes"]:
+    #     if building_perms:
+    #         bp = random.choice(building_perms)
+    #         base_perms.append(bp)
+
+    # Dédup avant bruit
     base_perms = list(set(base_perms))
 
-    # apply missing base permission noise
+    # ----- bruit : retirer quelques perms de base -----
     final_perms = []
     for (app_id, perm_id) in base_perms:
         if random.random() < PROB_MISSING_BASE_PERMISSION:
-            # deliberately remove this base permission for this user (simulate error)
             continue
         final_perms.append((uid, app_id, perm_id))
 
-    # add extra random permissions (over-privileged users)
+    # ----- bruit : permissions en trop -----
     if random.random() < PROB_EXTRA_PERMISSION:
         n_extra = random.randint(1, 5)
-        # pick some permissions not already in final_perms
         existing_perm_ids = set(p for (_, _, p) in final_perms)
         candidates = [p for p in all_perm_ids if p not in existing_perm_ids]
         for _ in range(n_extra):
@@ -302,22 +340,26 @@ for u in users:
             candidates.remove(extra)
             final_perms.append((uid, perm_to_app[extra], extra))
 
-    # also, give each user some minimal baseline perms (login to collaboration apps)
-    # choose up to 2 collab apps
-    collab_apps = [a["application_id"] for a in applications if "Collab" in a["name"]]
+    # ----- baseline collab (facultatif, comme avant) -----
     if collab_apps:
-        for _ in range(random.randint(1,2)):
+        for _ in range(random.randint(1, 2)):
             appc = random.choice(collab_apps)
             permc = random.choice(permissions_by_app[appc])
             if (uid, appc, permc) not in final_perms:
                 final_perms.append((uid, appc, permc))
 
-    # append to master rights list
+    # ====== OBLIGATOIRE : accès bâtiment de SA VILLE ======
+    # On récupère l'app_id de badge de la ville, puis l'ID de permission 'access_building'.
+    badge_app_id = city_to_badge_app_id[user_city]
+    building_pid = access_building_pid_by_app[badge_app_id]
+    if (uid, badge_app_id, building_pid) not in final_perms:
+        final_perms.append((uid, badge_app_id, building_pid))
+
     rights.extend(final_perms)
 
-# Convert to DataFrame and save
 rights_df = pd.DataFrame(rights, columns=["user_id", "application_id", "permission_id"])
 rights_df.to_csv(os.path.join(OUTPUT_DIR, "rights.csv"), index=False)
+
 
 # ----- Save applications.csv and permissions.csv -----
 apps_df = pd.DataFrame(applications)

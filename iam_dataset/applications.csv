@@ -1,51 +1,47 @@
 application_id,name,category
-1,Microsoft Teams,COLLAB
-2,SharePoint,COLLAB
-3,Exchange Online,COLLAB
-4,Outlook Web,COLLAB
-5,Zoom,COLLAB
-6,Slack,COLLAB
-7,Workday HCM,HR
-8,SAP SuccessFactors,HR
-9,Talentsoft,HR
-10,ADP Payroll,PAYROLL
-11,SAP Payroll,PAYROLL
-12,Sage Paie,PAYROLL
-13,SAP S/4HANA Finance,FINANCE
-14,Oracle Financials Cloud,FINANCE
-15,Salesforce,CRM
-16,HubSpot CRM,CRM
-17,Microsoft Dynamics 365 Sales,CRM
-18,Jira,DEVOPS
-19,Confluence,DEVOPS
-20,GitHub Enterprise,DEVOPS
-21,GitLab,DEVOPS
-22,Jenkins,DEVOPS
-23,ServiceNow ITSM,ITSM
-24,Okta,SECURITY
-25,Azure Active Directory,SECURITY
-26,CrowdStrike Falcon,SECURITY
-27,Nessus,SECURITY
-28,Power BI,DATA
-29,Tableau Server,DATA
-30,Snowflake,DATA
-31,Databricks,DATA
-32,SAP S/4HANA Logistics,ERP
-33,Oracle NetSuite,ERP
-34,Google Drive,DOCS
-35,Google Workspace Admin,DOCS
-36,Microsoft OneDrive,DOCS
-37,Access Badge System - HQ,FACILITIES
-38,Access Badge System - Toulouse,FACILITIES
-39,Access Badge System - Nantes,FACILITIES
-40,Visitor Management System,FACILITIES
-41,Internal App 41,OTHER
-42,Internal App 42,OTHER
-43,Internal App 43,OTHER
-44,Internal App 44,OTHER
-45,Internal App 45,OTHER
-46,Internal App 46,OTHER
-47,Internal App 47,OTHER
-48,Internal App 48,OTHER
-49,Internal App 49,OTHER
-50,Internal App 50,OTHER
+1,Access Badge System - Paris,FACILITIES
+2,Access Badge System - Toulouse,FACILITIES
+3,Access Badge System - Nantes,FACILITIES
+4,Access Badge System - Lyon,FACILITIES
+5,Access Badge System - Marseille,FACILITIES
+6,Access Badge System - Strasbourg,FACILITIES
+7,Access Badge System - Montpellier,FACILITIES
+8,Access Badge System - Bordeaux,FACILITIES
+9,Access Badge System - Rouen,FACILITIES
+10,Microsoft Teams,COLLAB
+11,SharePoint,COLLAB
+12,Exchange Online,COLLAB
+13,Outlook Web,COLLAB
+14,Zoom,COLLAB
+15,Slack,COLLAB
+16,Workday HCM,HR
+17,SAP SuccessFactors,HR
+18,Talentsoft,HR
+19,ADP Payroll,PAYROLL
+20,SAP Payroll,PAYROLL
+21,Sage Paie,PAYROLL
+22,SAP S/4HANA Finance,FINANCE
+23,Oracle Financials Cloud,FINANCE
+24,Salesforce,CRM
+25,HubSpot CRM,CRM
+26,Microsoft Dynamics 365 Sales,CRM
+27,Jira,DEVOPS
+28,Confluence,DEVOPS
+29,GitHub Enterprise,DEVOPS
+30,GitLab,DEVOPS
+31,Jenkins,DEVOPS
+32,ServiceNow ITSM,ITSM
+33,Okta,SECURITY
+34,Azure Active Directory,SECURITY
+35,CrowdStrike Falcon,SECURITY
+36,Nessus,SECURITY
+37,Power BI,DATA
+38,Tableau Server,DATA
+39,Snowflake,DATA
+40,Databricks,DATA
+41,SAP S/4HANA Logistics,ERP
+42,Oracle NetSuite,ERP
+43,Google Drive,DOCS
+44,Google Workspace Admin,DOCS
+45,Microsoft OneDrive,DOCS
+46,Visitor Management System,FACILITIES
