@@ -1,0 +1,51 @@
+application_id,name,category
+1,Microsoft Teams,COLLAB
+2,SharePoint,COLLAB
+3,Exchange Online,COLLAB
+4,Outlook Web,COLLAB
+5,Zoom,COLLAB
+6,Slack,COLLAB
+7,Workday HCM,HR
+8,SAP SuccessFactors,HR
+9,Talentsoft,HR
+10,ADP Payroll,PAYROLL
+11,SAP Payroll,PAYROLL
+12,Sage Paie,PAYROLL
+13,SAP S/4HANA Finance,FINANCE
+14,Oracle Financials Cloud,FINANCE
+15,Salesforce,CRM
+16,HubSpot CRM,CRM
+17,Microsoft Dynamics 365 Sales,CRM
+18,Jira,DEVOPS
+19,Confluence,DEVOPS
+20,GitHub Enterprise,DEVOPS
+21,GitLab,DEVOPS
+22,Jenkins,DEVOPS
+23,ServiceNow ITSM,ITSM
+24,Okta,SECURITY
+25,Azure Active Directory,SECURITY
+26,CrowdStrike Falcon,SECURITY
+27,Nessus,SECURITY
+28,Power BI,DATA
+29,Tableau Server,DATA
+30,Snowflake,DATA
+31,Databricks,DATA
+32,SAP S/4HANA Logistics,ERP
+33,Oracle NetSuite,ERP
+34,Google Drive,DOCS
+35,Google Workspace Admin,DOCS
+36,Microsoft OneDrive,DOCS
+37,Access Badge System - HQ,FACILITIES
+38,Access Badge System - Toulouse,FACILITIES
+39,Access Badge System - Nantes,FACILITIES
+40,Visitor Management System,FACILITIES
+41,Internal App 41,OTHER
+42,Internal App 42,OTHER
+43,Internal App 43,OTHER
+44,Internal App 44,OTHER
+45,Internal App 45,OTHER
+46,Internal App 46,OTHER
+47,Internal App 47,OTHER
+48,Internal App 48,OTHER
+49,Internal App 49,OTHER
+50,Internal App 50,OTHER
