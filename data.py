@@ -1,12 +1,11 @@
 """
 generate_iam_dataset.py
-Génère 4 fichiers CSV pour le projet Role Mining / IAM :
+Génère 4 fichiers CSV :
 - users.csv
 - applications.csv
 - permissions.csv
 - rights.csv
 
-Dépendances : pip install pandas faker numpy
 """
 
 import random
@@ -28,12 +27,12 @@ N_APPLICATIONS = 50            # nombre d'applications distinctes
 AVG_PERMISSIONS_PER_APP = 10   # moyenne de permissions par application
 TOTAL_PERMISSIONS = N_APPLICATIONS * AVG_PERMISSIONS_PER_APP
 
-# ----- listes réalistes / customisables -----
+
 locations = ["Paris", "Toulouse", "Nantes", "Lyon", "Marseille", "Strasbourg", "Montpellier", "Bordeaux", "Rouen"]
 contract_types = ["CDI", "CDD", "Stage", "Apprentissage", "Interim"]
 seniority_levels = ["Junior", "Medium", "Senior", "Lead", "Executive"]
 
-# Positions groupés (on peut ajouter/retirer)
+# Positions groupés
 positions_by_group = {
     "IT": ["Sysadmin", "Dev", "DevOps", "Architect", "IT Support", "Security Engineer", "DBA"],
     "HR": ["HR Manager", "Recruiter", "Payroll Specialist"],
@@ -133,7 +132,7 @@ applications = []
 for i, (nm, cat) in enumerate(APPLICATION_CATALOG[:N_APPLICATIONS], start=1):
     applications.append({"application_id": i, "name": nm, "category": cat})
 
-    
+
 # Mapping ville -> application_id de badge (utile pour l’assignation des droits)
 city_to_badge_app_id = {
     city: app["application_id"]
@@ -174,7 +173,6 @@ PERM_TEMPLATES = {
 }
 
 
-# Tu dois avoir PERM_TEMPLATES défini (comme dans ta version "apps réelles")
 # On garantit la présence de 'access_building' pour TOUTE app FACILITIES
 access_building_pid_by_app = {}  # app_id -> permission_id 'access_building'
 
@@ -309,12 +307,7 @@ for u in users:
             break
     base_perms = list(base_rules.get(group, []))  # [(app_id, perm_id), ...]
 
-    # (Ancienne logique aléatoire "building_perms" → À SUPPRIMER)
-    # if u["location"] in ["Toulouse", "Paris", "Nantes"]:
-    #     if building_perms:
-    #         bp = random.choice(building_perms)
-    #         base_perms.append(bp)
-
+    
     # Dédup avant bruit
     base_perms = list(set(base_perms))
 
@@ -327,7 +320,7 @@ for u in users:
 
     # ----- bruit : permissions en trop -----
     if random.random() < PROB_EXTRA_PERMISSION:
-        n_extra = random.randint(1, 5)
+        n_extra = random.randint(1, 3)
         existing_perm_ids = set(p for (_, _, p) in final_perms)
         candidates = [p for p in all_perm_ids if p not in existing_perm_ids]
         for _ in range(n_extra):
@@ -337,9 +330,9 @@ for u in users:
             candidates.remove(extra)
             final_perms.append((uid, perm_to_app[extra], extra))
 
-    # ----- baseline collab (facultatif, comme avant) -----
+    # ----- baseline collab -----
     if collab_apps:
-        for _ in range(random.randint(1, 2)):
+        for _ in range(random.randint(2, 3)):
             appc = random.choice(collab_apps)
             permc = random.choice(permissions_by_app[appc])
             if (uid, appc, permc) not in final_perms:
