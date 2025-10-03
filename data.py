@@ -173,9 +173,6 @@ PERM_TEMPLATES = {
     "OTHER":       ["login", "read", "write", "export", "admin"],
 }
 
-permissions = []
-pid = 1
-permissions_by_app = defaultdict(list)
 
 # Tu dois avoir PERM_TEMPLATES défini (comme dans ta version "apps réelles")
 # On garantit la présence de 'access_building' pour TOUTE app FACILITIES
