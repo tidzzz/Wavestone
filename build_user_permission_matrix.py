@@ -3,6 +3,7 @@
 Construit les matrices binaires:
   - user × permission (0/1)
   - user × application (0/1, déduite de user×permission via permission→app)
+  On ne orend pas en compte les permissions de "Facilities"
 
 Entrées attendues (CSV en UTF-8) dans ./data :
   users.csv:        user_id, ...                      (au minimum user_id)
@@ -35,6 +36,17 @@ apps  = pd.read_csv(os.path.join(INPUT_DIR, "applications.csv"))
 perms = pd.read_csv(os.path.join(INPUT_DIR, "permissions.csv"))
 rights = pd.read_csv(os.path.join(INPUT_DIR, "rights.csv"))
 
+# --- Filtrage des permissions non liées au métier ---
+# 1. Identifier les application_id de la catégorie 'FACILITIES'
+print("Étape 1: Identification des applications 'FACILITIES'...")
+facility_app_ids = apps[apps['category'] == 'FACILITIES']['application_id'].tolist()
+print(f"Trouvé {len(facility_app_ids)} applications à exclure.")
+
+# 2. Créer un nouveau DataFrame de permissions en excluant celles liées aux 'FACILITIES'
+print("Étape 2: Filtrage des permissions...")
+perms_metier = perms[~perms['application_id'].isin(facility_app_ids)]
+print(f"Permissions restantes après filtrage : {len(perms_metier)} (sur {len(perms)} initiales)")
+
 # ---------- Sanity checks légers (non bloquants) ----------
 def ensure_col(df, col, dfname):
     if col not in df.columns:
@@ -49,10 +61,11 @@ if "name" in apps.columns and "app_name" not in apps.columns:
 ensure_col(apps, "app_name", "applications") # On s'assure que la colonne existe bien
 
 
-ensure_col(perms, "permission_id", "permissions")
-ensure_col(perms, "application_id", "permissions")
-if "perm_name" not in perms.columns:
-    perms["perm_name"] = perms["permission_id"]
+ensure_col(perms_metier, "permission_id", "permissions")
+ensure_col(perms_metier, "application_id", "permissions")
+# Pour assurer la cohérence, on renomme la colonne 'name' en 'perm_name'
+if 'name' in perms_metier.columns and 'perm_name' not in perms_metier.columns:
+    perms_metier = perms_metier.rename(columns={'name': 'perm_name'})
 
 ensure_col(rights, "user_id", "rights")
 # rights doit relier à des permissions; si application_id est présent on l’ignore (on repart de permission_id)
@@ -62,7 +75,7 @@ if "permission_id" not in rights.columns:
 # ---------- Catalogues propres ----------
 users_cat = users[["user_id"]].drop_duplicates().reset_index(drop=True)
 apps_cat  = apps[["application_id", "app_name"]].drop_duplicates().reset_index(drop=True)
-perms_cat = perms[["permission_id", "application_id", "name"]].drop_duplicates().reset_index(drop=True)
+perms_cat = perms_metier[["permission_id", "application_id", "perm_name"]].drop_duplicates().reset_index(drop=True)
 
 # Sauvegarde catalogues (utile pour tracer les colonnes de matrices)
 users_cat.to_csv(os.path.join(OUTPUT_DIR, "users_catalog.csv"), index=False)
