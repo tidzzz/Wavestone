@@ -42,12 +42,8 @@ def ensure_col(df, col, dfname):
 
 ensure_col(users, "user_id", "users")
 ensure_col(apps, "application_id", "applications")
-# On utilise la colonne "name" et on la renomme en "app_name" pour la cohérence
-if "name" in apps.columns and "app_name" not in apps.columns:
-    apps = apps.rename(columns={"name": "app_name"})
-
-ensure_col(apps, "app_name", "applications") # On s'assure que la colonne existe bien
-
+if "app_name" not in apps.columns:
+    apps["app_name"] = apps["application_id"]
 
 ensure_col(perms, "permission_id", "permissions")
 ensure_col(perms, "application_id", "permissions")

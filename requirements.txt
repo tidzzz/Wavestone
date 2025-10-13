@@ -2,3 +2,6 @@ pandas
 faker
 numpy
 scipy
+scikit-learn
+matplotlib seaborn
+jupyter

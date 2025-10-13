@@ -112,17 +112,12 @@ APPLICATION_CATALOG = [
     ("Microsoft OneDrive", "DOCS"),
 
     # Facilities / bâtiments (pour les accès badge)
-    ("Access Badge System - HQ", "FACILITIES"),
-    ("Access Badge System - Toulouse", "FACILITIES"),
-    ("Access Badge System - Nantes", "FACILITIES"),
+    
     ("Visitor Management System", "FACILITIES"),
 ]
 
 
 # --- Générer 1 application Facilities "Access Badge System - <Ville>" par ville ---
-# (On enlève d'abord d'éventuelles entrées Facilities existantes pour éviter les doublons.)
-APPLICATION_CATALOG = [app for app in APPLICATION_CATALOG
-                       if not (app[1] == "FACILITIES" and app[0].startswith("Access Badge System - "))]
 
 # On ajoute une appli de badge par ville de 'locations'
 facilities_per_city = [(f"Access Badge System - {city}", "FACILITIES") for city in locations]
@@ -176,21 +171,53 @@ PERM_TEMPLATES = {
 # On garantit la présence de 'access_building' pour TOUTE app FACILITIES
 access_building_pid_by_app = {}  # app_id -> permission_id 'access_building'
 
+# Vocabulaire contrôlé pour générer des variantes cohérentes
+ALLOWED_SUFFIXES_BY_CAT = {
+    'COLLAB':     ['channel', 'team', 'message', 'thread'],
+    'HR':         ['employee', 'candidate', 'hr_report'],
+    'PAYROLL':    ['payroll', 'payslip', 'run'],
+    'FINANCE':    ['invoice', 'journal', 'payment'],
+    'CRM':        ['account', 'lead', 'opportunity'],
+    'DEVOPS':     ['issue', 'pipeline', 'repository', 'project', 'merge_request'],
+    'ITSM':       ['ticket', 'cmdb', 'request'],
+    'SECURITY':   ['alert', 'identity', 'endpoint'],
+    'DATA':       ['dashboard', 'dataset', 'report', 'warehouse'],
+    'ERP':        ['order', 'po', 'movement'],
+    'DOCS':       ['document', 'folder', 'share'],
+    'FACILITIES': ['building', 'visitor', 'badge'],
+    'OTHER':      ['data', 'record', 'report']
+}
+
+# Préfixes autorisés pour générer des couples prefix_suffix
+EXPANDABLE_PREFIXES = [
+    'view', 'read', 'edit', 'create', 'manage', 'export',
+    'approve', 'share', 'publish', 'query', 'open', 'resolve', 'post'
+]
+
 for app in applications:
     app_id = app["application_id"]
     cat = app["category"]
     base = PERM_TEMPLATES.get(cat, PERM_TEMPLATES["OTHER"])
 
-    # nb de permissions aléatoires + gabarits
-    n_perm = max(5, int(np.random.poisson(9)))
+    # Nombre cible de permissions (au moins les templates de base)
+    n_perm = max(len(base), max(5, int(np.random.poisson(9))))
+
     names = set()
+    # 1. Ajouter les gabarits tels quels (ils sont déjà cohérents)
+    names.update(base)
+
+    # 2. Générer des variantes contrôlées (prefix_suffix)
+    allowed_suffixes = ALLOWED_SUFFIXES_BY_CAT.get(cat, ALLOWED_SUFFIXES_BY_CAT['OTHER'])
+
+    # Les actions qui sont déjà spécifiques (contiennent un underscore) sont considérées atomiques
+    # On n'étend que si pas déjà de structure spécifique
     while len(names) < n_perm:
-        action = random.choice(base)
-        target = random.choice(["", "_users", "_data", "_reports", "_project", "_settings", "_building", "_mailbox"])
-        perm_name = f"{action}{target}".strip("_")
+        prefix = random.choice(EXPANDABLE_PREFIXES)
+        suffix = random.choice(allowed_suffixes)
+        perm_name = f"{prefix}_{suffix}"
         names.add(perm_name)
 
-    # >>> Garantie 'access_building' pour les apps de badge
+    # 3. Garantie 'access_building' pour les apps de type badge
     if cat == "FACILITIES":
         names.add("access_building")
 
@@ -203,7 +230,6 @@ for app in applications:
         })
         permissions_by_app[app_id].append(pid)
 
-        # Mémoriser l'ID de 'access_building'
         if app["category"] == "FACILITIES" and name == "access_building":
             access_building_pid_by_app[app_id] = pid
 

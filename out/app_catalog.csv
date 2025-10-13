@@ -1,47 +1,47 @@
 application_id,app_name
-1,1
-2,2
-3,3
-4,4
-5,5
-6,6
-7,7
-8,8
-9,9
-10,10
-11,11
-12,12
-13,13
-14,14
-15,15
-16,16
-17,17
-18,18
-19,19
-20,20
-21,21
-22,22
-23,23
-24,24
-25,25
-26,26
-27,27
-28,28
-29,29
-30,30
-31,31
-32,32
-33,33
-34,34
-35,35
-36,36
-37,37
-38,38
-39,39
-40,40
-41,41
-42,42
-43,43
-44,44
-45,45
-46,46
+1,Access Badge System - Paris
+2,Access Badge System - Toulouse
+3,Access Badge System - Nantes
+4,Access Badge System - Lyon
+5,Access Badge System - Marseille
+6,Access Badge System - Strasbourg
+7,Access Badge System - Montpellier
+8,Access Badge System - Bordeaux
+9,Access Badge System - Rouen
+10,Microsoft Teams
+11,SharePoint
+12,Exchange Online
+13,Outlook Web
+14,Zoom
+15,Slack
+16,Workday HCM
+17,SAP SuccessFactors
+18,Talentsoft
+19,ADP Payroll
+20,SAP Payroll
+21,Sage Paie
+22,SAP S/4HANA Finance
+23,Oracle Financials Cloud
+24,Salesforce
+25,HubSpot CRM
+26,Microsoft Dynamics 365 Sales
+27,Jira
+28,Confluence
+29,GitHub Enterprise
+30,GitLab
+31,Jenkins
+32,ServiceNow ITSM
+33,Okta
+34,Azure Active Directory
+35,CrowdStrike Falcon
+36,Nessus
+37,Power BI
+38,Tableau Server
+39,Snowflake
+40,Databricks
+41,SAP S/4HANA Logistics
+42,Oracle NetSuite
+43,Google Drive
+44,Google Workspace Admin
+45,Microsoft OneDrive
+46,Visitor Management System
