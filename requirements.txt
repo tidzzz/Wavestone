@@ -7,3 +7,5 @@ matplotlib
 seaborn
 jupyter
 tensorflow
+networkx
+node2vec
