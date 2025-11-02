@@ -6,7 +6,6 @@ from pathlib import Path
 
 from dbscan_miner import DBSCANRoleMiner
 from kmeans_miner import KMeansRoleMiner
-from hierarchical_miner import HierarchicalRoleMiner
 
 def main():
     parser = argparse.ArgumentParser(
@@ -23,10 +22,7 @@ Examples:
   
   # K-means auto-tuned
   python main.py --data out/users_permission_matrix.csv --algorithm kmeans
-  
-  # Hierarchical with visualization
-  python main.py --data out/users_permission_matrix.csv --algorithm hierarchical \\
-      --similarity 0.75 --show-hierarchy
+
   
   # Compare all algorithms
   python main.py --data out/users_permission_matrix.csv --compare \\
@@ -48,7 +44,7 @@ Threshold Parameters:
                        help='Path to user-permission matrix (CSV/XLSX)')
     
     # Algorithm
-    parser.add_argument('--algorithm', choices=['dbscan', 'kmeans', 'hierarchical'],
+    parser.add_argument('--algorithm', choices=['dbscan', 'kmeans'],
                        help='Clustering algorithm')
     
     parser.add_argument('--compare', action='store_true',
@@ -69,11 +65,7 @@ Threshold Parameters:
     
     # Algorithm-specific
     parser.add_argument('--n-clusters', type=int,
-                       help='Number of clusters (K-means/Hierarchical)')
-    
-    parser.add_argument('--linkage', default='ward',
-                       choices=['ward', 'complete', 'average', 'single'],
-                       help='Linkage method for Hierarchical')
+                       help='Number of clusters (K-means)')
     
     parser.add_argument('--metric', default='jaccard',
                        choices=['jaccard', 'cosine', 'euclidean'],
@@ -90,9 +82,6 @@ Threshold Parameters:
     # Visualization
     parser.add_argument('--plot', action='store_true',
                        help='Show plots (tuning, clustering)')
-    
-    parser.add_argument('--show-hierarchy', action='store_true',
-                       help='Show role hierarchy (Hierarchical only)')
     
     # Output
     parser.add_argument('--output', default='results',
@@ -137,17 +126,16 @@ def run_interactive(args):
     print("\nAvailable algorithms:")
     print("  1. DBSCAN       - Auto-detects number of roles, handles outliers")
     print("  2. K-means      - Fast, requires number of roles")
-    print("  3. Hierarchical - Shows role hierarchy")
-    print("  4. Compare all  - Test all algorithms")
+    print("  3. Compare all  - Test all algorithms")
     
-    choice = input("\nSelect (1-4): ").strip()
+    choice = input("\nSelect (1-3): ").strip()
     
-    algo_map = {'1': 'dbscan', '2': 'kmeans', '3': 'hierarchical', '4': 'compare'}
+    algo_map = {'1': 'dbscan', '2': 'kmeans','3': 'compare'}
     if choice not in algo_map:
         print(" Invalid choice")
         return
     
-    if choice == '4':
+    if choice == '3':
         args.compare = True
     else:
         args.algorithm = algo_map[choice]
@@ -217,12 +205,6 @@ def run_single_algorithm(args):
             grouping_threshold=args.grouping,
             impact_threshold=args.impact
         )
-    elif args.algorithm == 'hierarchical':
-        miner = HierarchicalRoleMiner(
-            similarity_threshold=args.similarity,
-            grouping_threshold=args.grouping,
-            impact_threshold=args.impact
-        )
     
     # Load data
     miner.load_data(args.data)
@@ -243,12 +225,6 @@ def run_single_algorithm(args):
             plot=args.plot,
             save_plot=f'{args.output}/kmeans_tuning.png' if args.plot else None
         )
-    elif args.algorithm == 'hierarchical':
-        miner.tune_parameters(
-            linkage_method=args.linkage,
-            plot=args.plot,
-            save_plot=f'{args.output}/hierarchical_dendrogram.png' if args.plot else None
-        )
     
     # Fit model
     print("\n" + "-"*80)
@@ -259,9 +235,6 @@ def run_single_algorithm(args):
         miner.fit(metric=args.metric)
     elif args.algorithm == 'kmeans':
         miner.fit(n_clusters=args.n_clusters)
-    elif args.algorithm == 'hierarchical':
-        miner.fit(n_clusters=args.n_clusters, linkage_method=args.linkage)
-    
     # Display results
     miner.print_summary()
     
@@ -292,11 +265,6 @@ def run_single_algorithm(args):
         miner.visualize_results(
             save_path=f'{args.output}/{args.algorithm}_clusters.png'
         )
-        
-        if args.show_hierarchy and args.algorithm == 'hierarchical':
-            miner.visualize_hierarchy(
-                save_path=f'{args.output}/role_hierarchy.png'
-            )
     
     # Export results
     if not args.no_export:
@@ -315,7 +283,7 @@ def compare_algorithms(args):
     print(" COMPARING ALL ALGORITHMS")
     print("="*80)
     
-    algorithms = ['dbscan', 'kmeans', 'hierarchical']
+    algorithms = ['dbscan', 'kmeans']
     results = {}
     
     for algo in algorithms:
@@ -336,13 +304,7 @@ def compare_algorithms(args):
                 grouping_threshold=args.grouping,
                 impact_threshold=args.impact
             )
-        elif algo == 'hierarchical':
-            miner = HierarchicalRoleMiner(
-                similarity_threshold=args.similarity,
-                grouping_threshold=args.grouping,
-                impact_threshold=args.impact
-            )
-        
+
         # Load and process
         miner.load_data(args.data)
         
@@ -353,10 +315,7 @@ def compare_algorithms(args):
         elif algo == 'kmeans':
             miner.tune_parameters(plot=False)
             miner.fit()
-        elif algo == 'hierarchical':
-            miner.tune_parameters(linkage_method=args.linkage, plot=False)
-            miner.fit(linkage_method=args.linkage)
-        
+
         # Store results
         results[algo] = {
             'miner': miner,
@@ -417,7 +376,6 @@ def compare_algorithms(args):
     print(f"\n Use case recommendations:")
     print(f"   • Unknown number of roles → DBSCAN")
     print(f"   • Need specific number of roles → K-means")
-    print(f"   • Want to see role hierarchy → Hierarchical")
     print(f"   • Have many outliers → DBSCAN")
     print(f"   • Need fast results → K-means")
     
