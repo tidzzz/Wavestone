@@ -3,5 +3,5 @@ faker
 numpy
 scipy
 scikit-learn
-matplotlib seaborn
+matplotlib
 jupyter
