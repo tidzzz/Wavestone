@@ -19,14 +19,14 @@ if 'name' in perms.columns and 'perm_name' not in perms.columns:
 if 'name' in apps.columns and 'app_name' not in apps.columns:
     apps = apps.rename(columns={'name': 'app_name'})
 
-# --- CHANGEMENT MAJEUR : ON GARDE TOUT ---
-# On ne filtre PLUS les applications FACILITIES.
-# On veut que le modèle apprenne les rôles géographiques.
-perms_final = perms.copy()
-print(f"Permissions conservées (TOUTES) : {len(perms_final)}")
+# --- FILTRAGE METIER STRICT ---
+# On supprime TOUT ce qui est FACILITIES. L'IA ne doit pas gérer ça.
+print("--- Filtrage strict : Exclusion des Facilities ---")
+facility_app_ids = apps[apps['category'] == 'FACILITIES']['application_id'].tolist()
+perms_metier = perms[~perms['application_id'].isin(facility_app_ids)].copy()
 
 # On filtre rights pour ne garder que les liens valides (sécurité de base)
-rights_final = rights[rights['permission_id'].isin(perms_final['permission_id'])].copy()
+rights_final = rights[rights['permission_id'].isin(perms_metier['permission_id'])].copy()
 print(f"Droits conservés : {len(rights_final)}")
 
 print("--- 2. Construction des Catalogues ---")
@@ -34,7 +34,7 @@ users_cat = users.sort_values("user_id")[["user_id", "department", "position", "
 users_cat["matrix_user_idx"] = users_cat.index
 user_id_to_idx = dict(zip(users_cat["user_id"], users_cat["matrix_user_idx"]))
 
-perms_cat = perms_final.sort_values("permission_id")[["permission_id", "application_id", "perm_name"]].reset_index(drop=True)
+perms_cat = perms_metier.sort_values("permission_id")[["permission_id", "application_id", "perm_name"]].reset_index(drop=True)
 perms_cat["matrix_perm_idx"] = perms_cat.index
 perm_id_to_idx = dict(zip(perms_cat["permission_id"], perms_cat["matrix_perm_idx"]))
 
