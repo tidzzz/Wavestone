@@ -69,7 +69,3 @@ This project is designed and executed as a real mission for Wavestone, with busi
 
 Academic project within the PCE course, completed by the student team, in partnership with Wavestone for an IAM use case.
 
-## License and Confidentiality
-
-Data and notebooks may contain sensitive information related to IAM. Any reuse must respect confidentiality and agreements with Wavestone. Unless otherwise stated, this repository is intended for pedagogical and demonstration use for the company.
-
